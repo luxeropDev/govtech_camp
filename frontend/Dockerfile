@@ -7,7 +7,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+# Next 16 defaults to Turbopack. Webpack has a lower, bounded memory profile on
+# the shared VPS; keep V8 below the available headroom without skipping checks.
+ENV NODE_OPTIONS=--max-old-space-size=512
+RUN npm run build -- --webpack
 FROM node:20.18.1-alpine AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 WORKDIR /app
